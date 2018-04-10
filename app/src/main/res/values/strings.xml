@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Na Zakupy</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="current_shopping_lists">Szkice</string>
+    <string name="archived_shopping_lists">Gotowe</string>
+</resources>
