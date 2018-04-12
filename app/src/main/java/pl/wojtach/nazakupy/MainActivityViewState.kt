@@ -1,24 +1,48 @@
 package pl.wojtach.nazakupy
 
 internal sealed class MainActivityViewState(
-        val onElementAdded: (ShoppingListHeader) -> Unit) {
+        val calculateListState: () -> List<ShoppingListHeader>) {
 
-    abstract fun calculateListState(): List<ShoppingListHeader>
 
-    class Initial(onElementAdded: (ShoppingListHeader) -> Unit) : MainActivityViewState(onElementAdded) {
+    class Initial(val onElementAdded: (ShoppingListHeader) -> Unit) : MainActivityViewState(
+            calculateListState = { emptyList<ShoppingListHeader>() }
+    )
 
-        override fun calculateListState(): List<ShoppingListHeader> = emptyList()
-    }
+    class Loading(val previous: MainActivityViewState?) : MainActivityViewState(
+            calculateListState = {
+                (previous?.calculateListState?.invoke()) ?: emptyList()
+            })
 
     class AddedNewElement(
             val previous: MainActivityViewState,
-            val addedElement: ShoppingListHeader,
-            onElementAdded: (ShoppingListHeader) -> Unit
-    ) : MainActivityViewState(onElementAdded) {
+            addedElement: ShoppingListHeader,
+            val onElementAdded: (ShoppingListHeader) -> Unit,
+            val onElementRemoved: (ShoppingListHeader) -> Unit
+    ) : MainActivityViewState(
+            calculateListState = {
+                previous.calculateListState().let { previousList ->
+                    (previousList.mapNotNull { it.id }.max() ?: 0)
+                            .let { previousMaxId ->
+                                previousList + addedElement.copy(id = previousMaxId + 1)
+                            }
+                }
+            })
 
-        override fun calculateListState(): List<ShoppingListHeader> =
-                (previous.calculateListState() + addedElement)
-    }
+    class RemovedElement(
+            val previous: MainActivityViewState,
+            removedElement: ShoppingListHeader,
+            val onElementAdded: (ShoppingListHeader) -> Unit,
+            val onElementRemoved: (ShoppingListHeader) -> Unit
+
+    ) : MainActivityViewState(
+            calculateListState = { (previous.calculateListState() - removedElement) }
+    )
+
+    class RemovedAllElements(
+            val onElementAdded: (ShoppingListHeader) -> Unit
+    ) : MainActivityViewState(
+            calculateListState = { emptyList() }
+    )
 
 
 }

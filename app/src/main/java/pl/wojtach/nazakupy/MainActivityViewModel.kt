@@ -18,6 +18,17 @@ internal class MainActivityViewModel : ViewModel() {
             MainActivityViewState.AddedNewElement(
                     previous = _viewStates.value!!,
                     addedElement = element,
-                    onElementAdded = this::onElementAdded
-            ).let { _viewStates.postValue(it) }
+                    onElementAdded = this::onElementAdded,
+                    onElementRemoved = this::onElementRemoved
+            ).let { _viewStates.setValue(it) }
+
+    private fun onElementRemoved(element: ShoppingListHeader): Unit = with(MainActivityViewState.RemovedElement(
+            previous = _viewStates.value!!,
+            removedElement = element,
+            onElementAdded = this::onElementAdded,
+            onElementRemoved = this::onElementRemoved
+    )) {
+        if (calculateListState() == emptyList<ShoppingListHeader>()) _viewStates.setValue(MainActivityViewState.RemovedAllElements(onElementAdded = this@MainActivityViewModel::onElementAdded))
+        else _viewStates.setValue(this)
+    }
 }
