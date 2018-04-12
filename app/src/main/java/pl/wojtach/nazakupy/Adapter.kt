@@ -10,21 +10,13 @@ import android.view.ViewGroup
 import kotlinx.android.synthetic.main.shopping_list_header.view.*
 
 internal class ShoppingListHeaderAdapter
-    : ListAdapter<ShoppingListHeader, ShoppingListHeaderViewHolder>(object : DiffUtil.ItemCallback<ShoppingListHeader>() {
-    override fun areItemsTheSame(oldItem: ShoppingListHeader, newItem: ShoppingListHeader): Boolean =
-            oldItem.id == newItem.id
-
-    override fun areContentsTheSame(oldItem: ShoppingListHeader, newItem: ShoppingListHeader): Boolean =
-            oldItem == newItem
-
-}) {
+    : ListAdapter<ShoppingListHeader, ShoppingListHeaderViewHolder>(HeadersComparator()) {
 
     var items: List<ShoppingListHeader> = emptyList()
         set(value) {
             field = ArrayList(value.asReversed())
             submitList(field)
             Log.d("Adapter", "current items: $field")
-
         }
 
     var onRemoveListener: (ShoppingListHeader) -> Unit = {}
@@ -49,4 +41,13 @@ internal class ShoppingListHeaderViewHolder(val view: View, val onRemoveListener
         nameView.text = data.name
         view.setOnClickListener { onRemoveListener(data) }
     }
+}
+
+internal class HeadersComparator : DiffUtil.ItemCallback<ShoppingListHeader>() {
+
+    override fun areItemsTheSame(oldItem: ShoppingListHeader, newItem: ShoppingListHeader): Boolean =
+            oldItem.id == newItem.id
+
+    override fun areContentsTheSame(oldItem: ShoppingListHeader, newItem: ShoppingListHeader): Boolean =
+            oldItem == newItem
 }

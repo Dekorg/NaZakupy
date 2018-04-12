@@ -1,48 +1,47 @@
 package pl.wojtach.nazakupy
 
+internal fun createIdForNewItem(existingItems: List<ShoppingListHeader>): Long =
+        existingItems.map { it.id }.let { ids -> generateSequence(1L, { it + 1 }).first { !(it in ids) } }
+
 internal sealed class MainActivityViewState(
-        val calculateListState: () -> List<ShoppingListHeader>) {
-
-
-    class Initial(val onElementAdded: (ShoppingListHeader) -> Unit) : MainActivityViewState(
-            calculateListState = { emptyList<ShoppingListHeader>() }
+        val previous: MainActivityViewState?,
+        val calculateListState: () -> List<ShoppingListHeader>,
+        val getAddItemAction: () -> MainActivityAction,
+        val getRemoveItemAction: (ShoppingListHeader) -> MainActivityAction
+) {
+    object Initial : MainActivityViewState(
+            previous = null,
+            calculateListState = { emptyList<ShoppingListHeader>() },
+            getAddItemAction = { MainActivityAction.AddNewItem },
+            getRemoveItemAction = { _ -> MainActivityAction.DoNothing }
     )
 
-    class Loading(val previous: MainActivityViewState?) : MainActivityViewState(
+    class AddedItem(previous: MainActivityViewState) : MainActivityViewState(
+            previous = previous,
             calculateListState = {
-                (previous?.calculateListState?.invoke()) ?: emptyList()
-            })
-
-    class AddedNewElement(
-            val previous: MainActivityViewState,
-            addedElement: ShoppingListHeader,
-            val onElementAdded: (ShoppingListHeader) -> Unit,
-            val onElementRemoved: (ShoppingListHeader) -> Unit
-    ) : MainActivityViewState(
-            calculateListState = {
-                previous.calculateListState().let { previousList ->
-                    (previousList.mapNotNull { it.id }.max() ?: 0)
-                            .let { previousMaxId ->
-                                previousList + addedElement.copy(id = previousMaxId + 1)
-                            }
-                }
-            })
-
-    class RemovedElement(
-            val previous: MainActivityViewState,
-            removedElement: ShoppingListHeader,
-            val onElementAdded: (ShoppingListHeader) -> Unit,
-            val onElementRemoved: (ShoppingListHeader) -> Unit
-
-    ) : MainActivityViewState(
-            calculateListState = { (previous.calculateListState() - removedElement) }
+                previous.calculateListState()
+                        .let { previousListState ->
+                            previousListState + ShoppingListHeader(
+                                    id = createIdForNewItem(previousListState),
+                                    formattedDate = "dzis",
+                                    name = "Nowa")
+                        }
+            },
+            getAddItemAction = { MainActivityAction.AddNewItem },
+            getRemoveItemAction = { item -> MainActivityAction.RemoveItem(item) }
     )
 
-    class RemovedAllElements(
-            val onElementAdded: (ShoppingListHeader) -> Unit
-    ) : MainActivityViewState(
-            calculateListState = { emptyList() }
+    class RemovedItem(previous: MainActivityViewState, removedItem: ShoppingListHeader) : MainActivityViewState(
+            previous = previous,
+            calculateListState = { previous.calculateListState() - removedItem },
+            getAddItemAction = { MainActivityAction.AddNewItem },
+            getRemoveItemAction = { item -> MainActivityAction.RemoveItem(item) }
     )
 
-
+    class RemovedAllItems(previous: MainActivityViewState) : MainActivityViewState(
+            previous = previous,
+            calculateListState = { emptyList() },
+            getAddItemAction = { MainActivityAction.AddNewItem },
+            getRemoveItemAction = { _ -> MainActivityAction.DoNothing }
+    )
 }

@@ -35,34 +35,11 @@ class MainActivity : AppCompatActivity() {
         recycler_view.adapter = adapter
 
         viewModel.viewStates.observe(this, Observer { viewState ->
-            viewState?.run {
-                when (this) {
-                    is MainActivityViewState.Initial -> {
-                        floatingActionButton.setOnClickListener { onElementAdded(ShoppingListHeader(id = null, formattedDate = "dzis", name = "Nowa")) }
-                    }
-                    is MainActivityViewState.AddedNewElement -> {
-                        floatingActionButton.setOnClickListener { onElementAdded(ShoppingListHeader(id = null, formattedDate = "dzis", name = "Nowa")) }
-                        adapter.items = calculateListState()
-                        adapter.onRemoveListener = onElementRemoved
-                    }
-
-                    is MainActivityViewState.RemovedElement -> {
-                        floatingActionButton.setOnClickListener { onElementAdded(ShoppingListHeader(id = null, formattedDate = "dzis", name = "Nowa")) }
-                        adapter.items = calculateListState()
-                        adapter.onRemoveListener = onElementRemoved
-                    }
-
-                    is MainActivityViewState.RemovedAllElements -> {
-                        floatingActionButton.setOnClickListener { onElementAdded(ShoppingListHeader(id = null, formattedDate = "dzis", name = "Nowa")) }
-                        adapter.items = calculateListState()
-                        adapter.onRemoveListener = {}
-                    }
-                    is MainActivityViewState.Loading -> {
-                    }
-                }
+            viewState?.apply {
+                adapter.items = calculateListState()
+                floating_action_button.setOnClickListener { viewModel.dispatchAction(getAddItemAction()) }
+                adapter.onRemoveListener = { item -> viewModel.dispatchAction(getRemoveItemAction(item)) }
             }
         })
-
-
     }
 }

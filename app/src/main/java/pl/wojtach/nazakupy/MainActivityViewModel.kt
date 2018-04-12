@@ -11,24 +11,20 @@ internal class MainActivityViewModel : ViewModel() {
         get() = _viewStates
 
     init {
-        _viewStates.value = MainActivityViewState.Initial(onElementAdded = this::onElementAdded)
+        _viewStates.value = MainActivityViewState.Initial
     }
 
-    private fun onElementAdded(element: ShoppingListHeader): Unit =
-            MainActivityViewState.AddedNewElement(
-                    previous = _viewStates.value!!,
-                    addedElement = element,
-                    onElementAdded = this::onElementAdded,
-                    onElementRemoved = this::onElementRemoved
-            ).let { _viewStates.setValue(it) }
-
-    private fun onElementRemoved(element: ShoppingListHeader): Unit = with(MainActivityViewState.RemovedElement(
-            previous = _viewStates.value!!,
-            removedElement = element,
-            onElementAdded = this::onElementAdded,
-            onElementRemoved = this::onElementRemoved
-    )) {
-        if (calculateListState() == emptyList<ShoppingListHeader>()) _viewStates.setValue(MainActivityViewState.RemovedAllElements(onElementAdded = this@MainActivityViewModel::onElementAdded))
-        else _viewStates.setValue(this)
-    }
+    internal fun dispatchAction(action: MainActivityAction) =
+            when (action) {
+                is MainActivityAction.DoNothing -> Unit
+                is MainActivityAction.AddNewItem -> _viewStates.postValue(
+                        MainActivityViewState.AddedItem(viewStates.value
+                                ?: MainActivityViewState.Initial))
+                is MainActivityAction.RemoveItem -> MainActivityViewState.RemovedItem(
+                        previous = viewStates.value ?: throw IllegalArgumentException(),
+                        removedItem = action.item
+                ).apply { _viewStates.postValue(this) }
+                        .takeIf { it.calculateListState().isEmpty() }
+                        ?.let { _viewStates.postValue(MainActivityViewState.RemovedAllItems(it)) }
+            }
 }
