@@ -30,16 +30,27 @@
 
         <TextView
             android:id="@+id/shopping_list_header_name"
-            android:layout_width="0dp"
+            android:layout_width="296dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
             android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             android:textAppearance="@android:style/TextAppearance.Material.Medium"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/shopping_list_header_date"
             tools:text="nazwa" />
+
+        <ImageButton
+            android:id="@+id/shopping_list_header_remove"
+            android:layout_width="34dp"
+            android:layout_height="37dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/shopping_list_header_remove_item"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toEndOf="@+id/shopping_list_header_name"
+            app:layout_constraintTop_toTopOf="@+id/shopping_list_header_name"
+            app:srcCompat="@android:drawable/ic_delete" />
 
     </android.support.constraint.ConstraintLayout>
 

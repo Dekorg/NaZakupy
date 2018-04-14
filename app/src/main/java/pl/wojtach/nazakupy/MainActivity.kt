@@ -9,7 +9,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
-    private val adapter = ShoppingListHeaderAdapter()
+    private val adapter = ShoppingListHeadersAdapter()
     private val viewModel: MainActivityViewModel by lazy {
         ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
     }
