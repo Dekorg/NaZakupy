@@ -1,17 +1,17 @@
 package pl.wojtach.nazakupy
 
-internal fun createIdForNewItem(existingItems: List<ShoppingListHeader>): Long =
+private fun createIdForNewItem(existingItems: Sequence<ShoppingListHeader>): Long =
         existingItems.map { it.id }.let { ids -> generateSequence(1L, { it + 1 }).first { !(it in ids) } }
 
 internal sealed class MainActivityViewState(
         val previous: MainActivityViewState?,
-        val calculateListState: () -> List<ShoppingListHeader>,
+        val calculateListState: () -> Sequence<ShoppingListHeader>,
         val getAddItemAction: () -> MainActivityAction,
         val getRemoveItemAction: (ShoppingListHeader) -> MainActivityAction
 ) {
     object Initial : MainActivityViewState(
             previous = null,
-            calculateListState = { emptyList<ShoppingListHeader>() },
+            calculateListState = { emptyList<ShoppingListHeader>().asSequence() },
             getAddItemAction = { MainActivityAction.AddNewItem },
             getRemoveItemAction = { _ -> MainActivityAction.DoNothing }
     )
@@ -33,14 +33,18 @@ internal sealed class MainActivityViewState(
 
     class RemovedItem(previous: MainActivityViewState, removedItem: ShoppingListHeader) : MainActivityViewState(
             previous = previous,
-            calculateListState = { previous.calculateListState() - removedItem },
+            calculateListState = {
+                previous.calculateListState()
+                        .takeIf { it.contains(removedItem) }?.minus(removedItem)
+                        ?: throw IllegalArgumentException()
+            },
             getAddItemAction = { MainActivityAction.AddNewItem },
             getRemoveItemAction = { item -> MainActivityAction.RemoveItem(item) }
     )
 
     class RemovedAllItems(previous: MainActivityViewState) : MainActivityViewState(
             previous = previous,
-            calculateListState = { emptyList() },
+            calculateListState = { emptyList<ShoppingListHeader>().asSequence() },
             getAddItemAction = { MainActivityAction.AddNewItem },
             getRemoveItemAction = { _ -> MainActivityAction.DoNothing }
     )

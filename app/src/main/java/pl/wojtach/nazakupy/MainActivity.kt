@@ -36,12 +36,9 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.viewStates.observe(this, Observer { viewState ->
             viewState?.apply {
-                adapter.items = calculateListState()
+                adapter.items = calculateListState().toList()
                 floating_action_button.setOnClickListener { viewModel.dispatchAction(getAddItemAction()) }
-                when (this) {
-                    is MainActivityViewState.Initial, is MainActivityViewState.RemovedAllItems -> adapter.onRemoveListener = { }
-                    else -> adapter.onRemoveListener = { item -> viewModel.dispatchAction(getRemoveItemAction(item)) }
-                }
+                adapter.onRemoveListener = { removedItem -> viewModel.dispatchAction(getRemoveItemAction(removedItem)) }
             }
         })
     }

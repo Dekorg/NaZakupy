@@ -16,15 +16,18 @@ internal class MainActivityViewModel : ViewModel() {
 
     internal fun dispatchAction(action: MainActivityAction) =
             when (action) {
+
                 is MainActivityAction.DoNothing -> Unit
+
                 is MainActivityAction.AddNewItem -> _viewStates.postValue(
                         MainActivityViewState.AddedItem(viewStates.value
                                 ?: MainActivityViewState.Initial))
+
                 is MainActivityAction.RemoveItem -> MainActivityViewState.RemovedItem(
                         previous = viewStates.value ?: throw IllegalArgumentException(),
                         removedItem = action.item
                 ).apply { _viewStates.postValue(this) }
-                        .takeIf { it.calculateListState().isEmpty() }
+                        .takeIf { it.calculateListState().count() == 0 }
                         ?.let { _viewStates.postValue(MainActivityViewState.RemovedAllItems(it)) }
             }
 }
