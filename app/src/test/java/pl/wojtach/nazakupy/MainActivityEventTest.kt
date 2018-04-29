@@ -3,35 +3,38 @@ package pl.wojtach.nazakupy
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.junit.Test
+import java.text.SimpleDateFormat
+import java.util.*
 
-class MainActivityViewStateTest {
+class MainActivityEventTest {
 
     @Test
     fun `Initial state has no elements`() {
-        MainActivityViewState.Initial.calculateListState().count() shouldBe 0
+        MainActivityEvent.Initial.calculateListState().count() shouldBe 0
     }
 
     @Test
     fun `Add new item adds default item to previous sequence`() {
-        MainActivityViewState.AddedItem(MainActivityViewState.Initial)
+        MainActivityEvent.AddedItem(MainActivityEvent.Initial)
                 .calculateListState().last() shouldEqual ShoppingListHeader(
                 id = 1L,
-                formattedDate = "dzis",
+                formattedDate = System.currentTimeMillis()
+                .let { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it)) },
                 name = "Nowa")
     }
 
     @Test
     fun `Add new item adds single item to previous, non Initial Sequence`() {
-        MainActivityViewState.AddedItem(MainActivityViewState.AddedItem(MainActivityViewState.Initial))
+        MainActivityEvent.AddedItem(MainActivityEvent.AddedItem(MainActivityEvent.Initial))
                 .calculateListState().count() shouldBe 2
     }
 
     @Test
     fun `Remove item removes item from sequence`() {
-        val previousState = MainActivityViewState.AddedItem(MainActivityViewState.AddedItem(MainActivityViewState.Initial))
+        val previousState = MainActivityEvent.AddedItem(MainActivityEvent.AddedItem(MainActivityEvent.Initial))
         val elementToBeRemoved = previousState.calculateListState().first()
 
-        MainActivityViewState.RemovedItem(previousState, elementToBeRemoved)
+        MainActivityEvent.RemovedItem(previousState, elementToBeRemoved)
                 .calculateListState()
                 .filter { it == elementToBeRemoved }
                 .count() shouldBe 0
@@ -39,10 +42,10 @@ class MainActivityViewStateTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `Remove item throws IllegalArgumentException when trying to remove non-existing element`() {
-        val previousState = MainActivityViewState.AddedItem(MainActivityViewState.AddedItem(MainActivityViewState.Initial))
+        val previousState = MainActivityEvent.AddedItem(MainActivityEvent.AddedItem(MainActivityEvent.Initial))
         val elementToBeRemoved = ShoppingListHeader(id = -1, formattedDate = "nope", name = "nope")
 
-        MainActivityViewState.RemovedItem(previousState, elementToBeRemoved)
+        MainActivityEvent.RemovedItem(previousState, elementToBeRemoved)
                 .calculateListState()
                 .filter { it == elementToBeRemoved }
                 .count() shouldBe 0

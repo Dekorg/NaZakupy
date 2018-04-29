@@ -6,28 +6,28 @@ import android.arch.lifecycle.ViewModel
 
 internal class MainActivityViewModel : ViewModel() {
 
-    private val _viewStates = MutableLiveData<MainActivityViewState>()
-    val viewStates: LiveData<MainActivityViewState>
-        get() = _viewStates
+    private val _viewEvents = MutableLiveData<MainActivityEvent>()
+    val viewEvents: LiveData<MainActivityEvent>
+        get() = _viewEvents
 
     init {
-        _viewStates.value = MainActivityViewState.Initial
+        _viewEvents.value = MainActivityEvent.Initial
     }
 
-    internal fun dispatchAction(action: MainActivityAction) =
-            when (action) {
+    internal fun dispatchIntent(intent: MainActivityIntent) =
+            when (intent) {
 
-                is MainActivityAction.DoNothing -> Unit
+                is MainActivityIntent.DoNothing -> Unit
 
-                is MainActivityAction.AddNewItem -> _viewStates.postValue(
-                        MainActivityViewState.AddedItem(viewStates.value
-                                ?: MainActivityViewState.Initial))
+                is MainActivityIntent.AddNewItem -> _viewEvents.postValue(
+                        MainActivityEvent.AddedItem(viewEvents.value
+                                ?: MainActivityEvent.Initial))
 
-                is MainActivityAction.RemoveItem -> MainActivityViewState.RemovedItem(
-                        previous = viewStates.value ?: throw IllegalArgumentException(),
-                        removedItem = action.item
-                ).apply { _viewStates.postValue(this) }
+                is MainActivityIntent.RemoveItem -> MainActivityEvent.RemovedItem(
+                        previous = viewEvents.value ?: throw IllegalArgumentException(),
+                        removedItem = intent.item
+                ).apply { _viewEvents.postValue(this) }
                         .takeIf { it.calculateListState().count() == 0 }
-                        ?.let { _viewStates.postValue(MainActivityViewState.RemovedAllItems(it)) }
+                        ?.let { _viewEvents.postValue(MainActivityEvent.RemovedAllItems(it)) }
             }
 }

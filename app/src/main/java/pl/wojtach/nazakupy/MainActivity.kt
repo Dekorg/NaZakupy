@@ -34,11 +34,12 @@ class MainActivity : AppCompatActivity() {
 
         recycler_view.adapter = adapter
 
-        viewModel.viewStates.observe(this, Observer { viewState ->
+        floating_action_button.setOnClickListener { viewModel.dispatchIntent(MainActivityIntent.AddNewItem) }
+        adapter.onRemoveListener = { removedItem -> viewModel.dispatchIntent(MainActivityIntent.RemoveItem(removedItem)) }
+
+        viewModel.viewEvents.observe(this, Observer { viewState ->
             viewState?.apply {
                 adapter.items = calculateListState().toList()
-                floating_action_button.setOnClickListener { viewModel.dispatchAction(getAddItemAction()) }
-                adapter.onRemoveListener = { removedItem -> viewModel.dispatchAction(getRemoveItemAction(removedItem)) }
             }
         })
     }
