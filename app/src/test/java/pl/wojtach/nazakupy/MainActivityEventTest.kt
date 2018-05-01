@@ -3,6 +3,7 @@ package pl.wojtach.nazakupy
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.junit.Test
+import pl.wojtach.nazakupy.room.ShoppingListHeader
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -19,7 +20,7 @@ class MainActivityEventTest {
                 .calculateListState().last() shouldEqual ShoppingListHeader(
                 id = 1L,
                 formattedDate = System.currentTimeMillis()
-                .let { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it)) },
+                        .let { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it)) },
                 name = "Nowa")
     }
 

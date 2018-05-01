@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.shopping_list_header.*
 import pl.wojtach.nazakupy.ShoppingListHeadersAdapter.ShoppingListHeaderViewHolder
+import pl.wojtach.nazakupy.room.ShoppingListHeader
 
 internal class ShoppingListHeadersAdapter
     : ListAdapter<ShoppingListHeader, ShoppingListHeaderViewHolder>(HeadersComparator()) {

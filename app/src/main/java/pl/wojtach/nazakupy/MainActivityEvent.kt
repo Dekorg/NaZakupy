@@ -1,5 +1,6 @@
 package pl.wojtach.nazakupy
 
+import pl.wojtach.nazakupy.room.ShoppingListHeader
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -36,5 +37,9 @@ internal sealed class MainActivityEvent(
 
     class RemovedAllItems(previous: MainActivityEvent) : MainActivityEvent(
             calculateListState = { emptyList<ShoppingListHeader>().asSequence() }
+    )
+
+    class LoadedFromDb(previous: MainActivityEvent, loadedItems: Array<ShoppingListHeader>): MainActivityEvent(
+            calculateListState = { (loadedItems.asSequence() + previous.calculateListState()).distinct()  }
     )
 }
