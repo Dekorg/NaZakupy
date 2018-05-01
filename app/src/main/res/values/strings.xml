@@ -6,4 +6,7 @@
     <string name="current_shopping_lists">Szkice</string>
     <string name="archived_shopping_lists">Gotowe</string>
     <string name="shopping_list_header_remove_item">Usuń listę</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
