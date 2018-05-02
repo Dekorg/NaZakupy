@@ -4,6 +4,8 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: 'kotlin-kapt'
+
 androidExtensions {
     experimental = true
 }
@@ -34,11 +36,21 @@ dependencies {
     implementation "com.android.support:design:$support_libs_version"
     implementation 'com.android.support.constraint:constraint-layout:1.1.0'
     implementation "android.arch.lifecycle:extensions:$architecture_components_version"
-    implementation "android.arch.persistence.room:runtime:1.1.0-beta3"
-    annotationProcessor "android.arch.persistence.room:compiler:1.1.0-beta3"
+    implementation "android.arch.persistence.room:runtime:1.0.0"
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.5"
+
+    kapt "android.arch.persistence.room:compiler:1.0.0"
+
     testImplementation "android.arch.core:core-testing:$architecture_components_version"
     testImplementation 'junit:junit:4.12'
     testImplementation "org.amshove.kluent:kluent-android:$kluent_version"
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+kotlin {
+    experimental {
+        coroutines "enable"
+    }
 }

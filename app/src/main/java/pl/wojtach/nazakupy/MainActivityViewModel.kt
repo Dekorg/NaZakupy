@@ -1,21 +1,37 @@
 package pl.wojtach.nazakupy
 
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MediatorLiveData
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.ViewModel
+import android.arch.lifecycle.*
+import android.util.Log
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
+import pl.wojtach.nazakupy.room.HeaderDao
 import pl.wojtach.nazakupy.room.ShoppingDataBase
 
 internal class MainActivityViewModel : ViewModel() {
 
-    private val _viewEvents = MediatorLiveData<MainActivityEvent>()
+    private lateinit var globalEvents: LiveData<MainActivityEvent>
+
+    private val mediator: MediatorLiveData<MainActivityEvent> = MediatorLiveData<MainActivityEvent>()
+
     val viewEvents: LiveData<MainActivityEvent>
-        get() = _viewEvents
+        get() = mediator
+
+    private lateinit var headersDao: HeaderDao
 
     init {
-        _viewEvents.value = MainActivityEvent.Initial
-        ShoppingDataBase.instance.getHeadersDao().getAllHeaders()
-                .let { _viewEvents.addSource(it) {data -> _viewEvents.postValue(MainActivityEvent.LoadedFromDb(previous = _viewEvents.value!!, loadedItems = data!!)) } }
+        mediator.value = MainActivityEvent.Initial
+
+        launch {
+            headersDao = ShoppingDataBase.instance.getHeadersDao()
+            globalEvents = headersDao.getAllHeaders()
+                    .let { Transformations.map(it) { data ->
+                        MainActivityEvent.LoadedFromDb(
+                                previous = viewEvents.value ?: MainActivityEvent.Initial,
+                                loadedItems = data)
+                    } }
+            mediator.apply { addSource(globalEvents) { postValue(it)} }
+        }
+
     }
 
     internal fun dispatchIntent(intent: MainActivityIntent) =
@@ -23,15 +39,24 @@ internal class MainActivityViewModel : ViewModel() {
 
                 is MainActivityIntent.DoNothing -> Unit
 
-                is MainActivityIntent.AddNewItem -> _viewEvents.postValue(
+                is MainActivityIntent.AddNewItem -> mediator.postValue(
                         MainActivityEvent.AddedItem(viewEvents.value
                                 ?: MainActivityEvent.Initial))
 
                 is MainActivityIntent.RemoveItem -> MainActivityEvent.RemovedItem(
                         previous = viewEvents.value ?: throw IllegalArgumentException(),
                         removedItem = intent.item
-                ).apply { _viewEvents.postValue(this) }
+                ).apply { mediator.postValue(this) }
                         .takeIf { it.calculateListState().count() == 0 }
-                        ?.let { _viewEvents.postValue(MainActivityEvent.RemovedAllItems(it)) }
+                        ?.let { mediator.postValue(MainActivityEvent.RemovedAllItems(it)) }
             }
+
+    override fun onCleared() {
+        launch {
+            headersDao.insertHeader(*viewEvents.value?.calculateListState?.invoke()?.toList()?.toTypedArray() ?: emptyArray())
+        Log.d("MainActivityVievModel", "saving headers")
+        }
+        super.onCleared()
+        Log.d("MainActivityVievModel", "viewmodel cleared")
+    }
 }
