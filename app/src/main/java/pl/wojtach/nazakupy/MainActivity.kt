@@ -5,7 +5,10 @@ import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import kotlinx.android.synthetic.main.activity_main.*
+import pl.wojtach.nazakupy.model.MainActivityIntent
+import pl.wojtach.nazakupy.model.MainActivityViewModel
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,8 +41,9 @@ class MainActivity : AppCompatActivity() {
         adapter.onRemoveListener = { removedItem -> viewModel.dispatchIntent(MainActivityIntent.RemoveItem(removedItem)) }
 
         viewModel.viewEvents.observe(this, Observer { viewState ->
-            viewState?.apply {
+            viewState?.run {
                 adapter.items = calculateListState().toList()
+                Log.d(this@MainActivity::class.java.simpleName, "viewEvent: $this")
             }
         })
     }

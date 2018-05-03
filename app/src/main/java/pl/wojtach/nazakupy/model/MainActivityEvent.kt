@@ -1,8 +1,6 @@
-package pl.wojtach.nazakupy
+package pl.wojtach.nazakupy.model
 
 import pl.wojtach.nazakupy.room.ShoppingListHeader
-import java.text.SimpleDateFormat
-import java.util.*
 
 private fun createIdForNewItem(existingItems: Sequence<ShoppingListHeader>): Long =
         existingItems.map { it.id }.let { ids -> generateSequence(1L, { it + 1 }).first { it !in ids } }
@@ -14,16 +12,9 @@ internal sealed class MainActivityEvent(
             calculateListState = { emptyList<ShoppingListHeader>().asSequence() }
     )
 
-    class AddedItem(previous: MainActivityEvent) : MainActivityEvent(
+    class AddedItem(previous: MainActivityEvent, addedItem: ShoppingListHeader) : MainActivityEvent(
             calculateListState = {
-                previous.calculateListState()
-                        .let { previousListState ->
-                            previousListState + ShoppingListHeader(
-                                    id = createIdForNewItem(previousListState),
-                                    formattedDate = System.currentTimeMillis()
-                                            .let { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it)) },
-                                    name = "Nowa")
-                        }
+                previous.calculateListState() + addedItem
             }
     )
 
@@ -39,7 +30,7 @@ internal sealed class MainActivityEvent(
             calculateListState = { emptyList<ShoppingListHeader>().asSequence() }
     )
 
-    class LoadedFromDb(previous: MainActivityEvent, loadedItems: Array<ShoppingListHeader>): MainActivityEvent(
-            calculateListState = { (loadedItems.asSequence() + previous.calculateListState()).distinct()  }
+    class LoadedFromDb(previous: MainActivityEvent, loadedItems: Array<ShoppingListHeader>) : MainActivityEvent(
+            calculateListState = { (loadedItems.asSequence() + previous.calculateListState()).distinct() }
     )
 }

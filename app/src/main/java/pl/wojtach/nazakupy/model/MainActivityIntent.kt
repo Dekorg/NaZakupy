@@ -1,9 +1,8 @@
-package pl.wojtach.nazakupy
+package pl.wojtach.nazakupy.model
 
 import pl.wojtach.nazakupy.room.ShoppingListHeader
 
 internal sealed class MainActivityIntent {
-    object DoNothing : MainActivityIntent()
     object AddNewItem : MainActivityIntent()
     data class RemoveItem(val item: ShoppingListHeader) : MainActivityIntent()
 }

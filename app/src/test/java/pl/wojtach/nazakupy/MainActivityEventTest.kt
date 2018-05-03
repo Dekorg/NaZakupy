@@ -3,6 +3,7 @@ package pl.wojtach.nazakupy
 import org.amshove.kluent.shouldBe
 import org.amshove.kluent.shouldEqual
 import org.junit.Test
+import pl.wojtach.nazakupy.model.MainActivityEvent
 import pl.wojtach.nazakupy.room.ShoppingListHeader
 import java.text.SimpleDateFormat
 import java.util.*
