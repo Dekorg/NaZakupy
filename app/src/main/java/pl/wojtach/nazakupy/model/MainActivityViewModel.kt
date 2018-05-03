@@ -24,46 +24,45 @@ internal class MainActivityViewModel : ViewModel() {
 
         launch {
             headersDao = ShoppingDataBase.instance.getHeadersDao()
-            globalEvents = headersDao.getAllHeaders()
-                    .let {
-                        Transformations.map(it) { data ->
-                            MainActivityEvent.LoadedFromDb(
-                                    previous = viewEvents.value
-                                            ?: MainActivityEvent.Initial,
-                                    loadedItems = data)
-                        }
-                    }
-            mediator.apply { addSource(globalEvents) { postValue(it) } }
+            setupGlobalEvents()
+            bindGlobalEventsToMediator()
         }
 
     }
 
-    internal fun dispatchIntent(intent: MainActivityIntent) = launch {
-        when (intent) {
-            is MainActivityIntent.AddNewItem -> {
-                val newHeader = createNewHeader(existingItems = mediator.value?.calculateListState?.invoke()
-                        ?: emptySequence())
-                launch {
-                    val newEvent = MainActivityEvent.AddedItem(previous = mediator.value
-                            ?: MainActivityEvent.Initial, addedItem = newHeader)
-                    mediator.postValue(newEvent)
-                }
-                launch { headersDao.insertHeader(newHeader) }
-            }
-
-            is MainActivityIntent.RemoveItem -> {
-                launch {
-                    val removedEvent = MainActivityEvent.RemovedItem(
-                            previous = mediator.value ?: throw IllegalArgumentException(),
-                            removedItem = intent.item
-                    )
-                    mediator.postValue(removedEvent)
-                    if (removedEvent.calculateListState().count() == 0) {
-                        mediator.postValue(MainActivityEvent.RemovedAllItems(previous = removedEvent))
-                    }
-                }
-                launch { headersDao.deleteHeader(intent.item) }
+    private fun bindGlobalEventsToMediator() {
+        with(mediator) {
+            addSource(globalEvents) { event ->
+                if (getListState(event).toSet() != getLatestEvent().calculateListState().toSet()) postValue(event)
             }
         }
     }
+
+    private fun setupGlobalEvents() {
+        globalEvents = headersDao.getAllHeaders()
+                .let {
+                    Transformations.map(it) { data ->
+                        MainActivityEvent.SyncedWithDb(
+                                previous = getLatestEvent(),
+                                loadedItems = data)
+                    }
+                }
+    }
+
+    internal fun dispatchIntent(intent: MainActivityIntent) = launch { resolveIntent(intent) }
+
+    private fun resolveIntent(intent: MainActivityIntent) = when (intent) {
+
+        is MainActivityIntent.AddNewItem -> createNewHeader(existingItems = getLatestEvent().calculateListState())
+                .let { MainActivityEvent.AddedItem(previous = getLatestEvent(), addedItem = it) }
+                .let { mediator.postValue(it); headersDao.insertHeader(it.addedItem) }
+
+
+        is MainActivityIntent.RemoveItem -> MainActivityEvent.RemovedItem(previous = getLatestEvent(), removedItem = intent.item)
+                .let { mediator.postValue(it); headersDao.deleteHeader(it.removedItem) }
+    }
+
+    private fun getLatestEvent() = mediator.value ?: MainActivityEvent.Initial
+    private fun getListState(event: MainActivityEvent?) = event?.calculateListState?.invoke()
+            ?: emptySequence()
 }

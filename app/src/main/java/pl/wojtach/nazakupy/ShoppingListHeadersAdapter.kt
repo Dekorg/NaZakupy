@@ -12,6 +12,8 @@ import kotlinx.android.synthetic.main.shopping_list_header.*
 import pl.wojtach.nazakupy.ShoppingListHeadersAdapter.ShoppingListHeaderViewHolder
 import pl.wojtach.nazakupy.room.ShoppingListHeader
 
+typealias onItemRemoved = (ShoppingListHeader) -> Unit
+
 internal class ShoppingListHeadersAdapter
     : ListAdapter<ShoppingListHeader, ShoppingListHeaderViewHolder>(HeadersComparator()) {
 
@@ -22,7 +24,7 @@ internal class ShoppingListHeadersAdapter
             Log.d("Adapter", "current items: $field")
         }
 
-    var onRemoveListener: (ShoppingListHeader) -> Unit = {}
+    var onRemoveListener: onItemRemoved = {}
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ShoppingListHeaderViewHolder =
             LayoutInflater.from(parent.context).inflate(R.layout.shopping_list_header, parent, false)
@@ -35,7 +37,7 @@ internal class ShoppingListHeadersAdapter
 
     class ShoppingListHeaderViewHolder(
             override val containerView: View,
-            private val onRemoveListener: (ShoppingListHeader) -> Unit
+            private val onRemoveListener: onItemRemoved
     ) : RecyclerView.ViewHolder(containerView), LayoutContainer {
 
         fun onBind(data: ShoppingListHeader) {
