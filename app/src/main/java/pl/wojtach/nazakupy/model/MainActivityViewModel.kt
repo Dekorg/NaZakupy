@@ -2,15 +2,15 @@ package pl.wojtach.nazakupy.model
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MediatorLiveData
-import android.arch.lifecycle.Transformations
 import android.arch.lifecycle.ViewModel
 import kotlinx.coroutines.experimental.launch
 import pl.wojtach.nazakupy.room.HeaderDao
 import pl.wojtach.nazakupy.room.ShoppingDataBase
+import pl.wojtach.nazakupy.room.ShoppingListHeader
 
 internal class MainActivityViewModel : ViewModel() {
 
-    private lateinit var globalEvents: LiveData<MainActivityEvent>
+    private lateinit var globalEvents: LiveData<Array<ShoppingListHeader>>
 
     private val mediator: MediatorLiveData<MainActivityEvent> = MediatorLiveData()
 
@@ -24,7 +24,7 @@ internal class MainActivityViewModel : ViewModel() {
 
         launch {
             headersDao = ShoppingDataBase.instance.getHeadersDao()
-            setupGlobalEvents()
+            globalEvents = headersDao.getAllHeaders()
             bindGlobalEventsToMediator()
         }
 
@@ -32,21 +32,17 @@ internal class MainActivityViewModel : ViewModel() {
 
     private fun bindGlobalEventsToMediator() {
         with(mediator) {
-            addSource(globalEvents) { event ->
-                if (getListState(event).toSet() != getLatestEvent().calculateListState().toSet()) postValue(event)
+            addSource(globalEvents) { data ->
+                launch {
+                    data?.toSet()
+                            .takeIf { it != getLatestEvent().calculateListState().toSet() }
+                            ?.let {
+                                postValue(MainActivityEvent.SyncedWithDb(previous = getLatestEvent(), loadedItems = data
+                                        ?: emptyArray()))
+                            }
+                }
             }
         }
-    }
-
-    private fun setupGlobalEvents() {
-        globalEvents = headersDao.getAllHeaders()
-                .let {
-                    Transformations.map(it) { data ->
-                        MainActivityEvent.SyncedWithDb(
-                                previous = getLatestEvent(),
-                                loadedItems = data)
-                    }
-                }
     }
 
     internal fun dispatchIntent(intent: MainActivityIntent) = launch { resolveIntent(intent) }
@@ -63,6 +59,4 @@ internal class MainActivityViewModel : ViewModel() {
     }
 
     private fun getLatestEvent() = mediator.value ?: MainActivityEvent.Initial
-    private fun getListState(event: MainActivityEvent?) = event?.calculateListState?.invoke()
-            ?: emptySequence()
 }
